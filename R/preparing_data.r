@@ -8,9 +8,9 @@ library(lubridate)
 
 # Data downloaded from opendatasus
 # www.opendatasus
-srag2020 <- vroom("~/Downloads/INFLUD20-11-07-2022.csv")
-srag2021 <- vroom("~/Downloads/INFLUD21-11-07-2022.csv")
-srag2022 <- vroom("~/Downloads/INFLUD22-11-07-2022.csv")
+srag2020 <- vroom("~/Downloads/INFLUD20-18-07-2022.csv")
+srag2021 <- vroom("~/Downloads/INFLUD21-18-07-2022.csv")
+srag2022 <- vroom("~/Downloads/INFLUD22-18-07-2022.csv")
 
 
 srag.all <- srag2020 %>% 
