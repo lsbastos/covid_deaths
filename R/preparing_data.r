@@ -69,30 +69,76 @@ srag.all <- srag.all %>%
 #     SRAG_COVIDcum = cumsum(SRAG_COVID),
 #   ) %>% write_csv2(file = "obitos_srag_sragcovid_SP.csv")
 
-srag.all %>% 
-  filter(EVOLUCAO == 2, COVID ==1, DT_EVOLUCA < "2020-03-18") %>% 
-  View()
 
 srag.all %>% 
-  filter(EVOLUCAO == 2) %>%
+  filter(EVOLUCAO == 2, COVID ==1,
+         DT_SIN_PRI < "2022-07-01") %>% 
+  mutate(
+    DT_SIN_PRI.m = ym(paste(year(DT_SIN_PRI),month(DT_SIN_PRI))),
+    UTI.c = case_when(UTI == 1 ~ "Sim",
+                      UTI == 2 ~ "Não",
+                      UTI == 9 | is.na(UTI) ~ "Sem preenchimento",
+                      TRUE ~ "")
+  ) %>% 
+  group_by(DT_SIN_PRI.m, UTI.c) %>% tally() %>% 
+  # View()
+  ggplot(aes(x = DT_SIN_PRI.m, y = n)) + 
+  geom_col(aes(fill = UTI.c)) +
+  # geom_col(fill = "darkred") +
+  scale_x_date(date_labels = "%m/%y", date_breaks = "1 month") +
+  theme_bw(base_size = 16) +
+  labs(
+    x = "Mes/Ano de primeiros sintomas",
+    y = "Óbitos notificados no SIVEP-Gripe",
+    fill = "UTI"
+  ) +
+  theme(legend.position = c(.8,.8)) + ggthemes::scale_fill_colorblind()
+
+
+
+srag.all %>% 
+  filter(EVOLUCAO == 2, COVID ==1,
+         DT_SIN_PRI < "2022-07-01") %>% 
+  mutate(
+    DT_SIN_PRI.m = ym(paste(year(DT_SIN_PRI),month(DT_SIN_PRI))),
+    Tempo = as.numeric(DT_EVOLUCA - DT_SIN_PRI), 
+    Tempo.c = case_when(Tempo < 15 ~ "a. Até 15 dias",
+                        Tempo < 30 & Tempo >= 15 ~ "b. Entre 15 dias e 1 mês",
+                        Tempo < 60 & Tempo >= 30 ~ "c. Entre 1 e 2 meses",
+                        Tempo >= 60 ~ "d. Acima de 2 meses", )
+  ) %>% 
+  drop_na(Tempo.c) %>% 
+  group_by(DT_SIN_PRI.m, Tempo.c) %>% tally() %>% 
+  # View()
+  ggplot(aes(x = DT_SIN_PRI.m, y = n)) + 
+  geom_col(aes(fill = Tempo.c)) +
+  # geom_col(fill = "darkred") +
+  scale_x_date(date_labels = "%m/%y", date_breaks = "1 month") +
+  theme_bw(base_size = 16) +
+  labs(
+    x = "Mes/Ano de primeiros sintomas",
+    y = "Óbitos com confirmação de COVID (SIVEP-Gripe)",
+    fill = "Tempo entre 1os sintomas e óbito"
+  ) +
+  theme(legend.position = c(.8,.8)) + ggthemes::scale_fill_colorblind()
+
+srag.all %>% 
+  filter(EVOLUCAO == 2, COVID ==1) %>%
   group_by(COVID) %>% 
   summarise(
     n = n(),
-    n2 = sum(DT_EVOLUCA <= "2022-03-11", na.rm = T)
   )
 
 srag.all %>% 
-  filter(COVID == 0, EVOLUCAO == 2) %>%
-  #group_by(PCR_RESUL, PCR_SARS2, AN_SARS2) %>% 
+  filter(COVID == 1, EVOLUCAO == 2) %>%
+  group_by(Ano = year(DT_SIN_PRI)) %>% 
   summarise(
     n = n(),
-    n2 = sum(DT_DIGITA <= "2022-03-11")
   )
 
 
 srag.all %>% 
-  filter(CLASSI_FIN == 4, EVOLUCAO == 2, 
-         DT_DIGITA <= "2022-03-11") %>% 
+  filter(CLASSI_FIN == 4, EVOLUCAO == 2) %>% 
   mutate(
     Coleta = cut(as.numeric(DT_COLETA - DT_SIN_PRI), 
                  breaks = c(0,7,14,21,28,Inf), right = F)
@@ -101,8 +147,7 @@ srag.all %>%
   mutate(Prop = n/sum(n) * 100)
 
 srag.all %>% 
-  filter(CLASSI_FIN == 5, EVOLUCAO == 2, 
-         DT_DIGITA <= "2022-03-11") %>% 
+  filter(CLASSI_FIN == 5, EVOLUCAO == 2) %>% 
   mutate(
     Coleta = cut(as.numeric(DT_COLETA - DT_SIN_PRI), 
                  breaks = c(0,7,14,21,28,Inf), right = F)
@@ -114,8 +159,7 @@ srag.all %>%
 srag.all %>% 
   filter(EVOLUCAO == 2, 
          #DT_DIGITA <= "2022-03-11",
-         DT_EVOLUCA >= "2020-03-11",
-         DT_EVOLUCA < "2022-03-11") %>% 
+         DT_EVOLUCA >= "2020-03-11") %>% 
   summarise(
     srag = n(),
     covid_susp = sum(CLASSI_FIN > 3 | is.na(CLASSI_FIN)),
@@ -142,44 +186,56 @@ srag.all %>%
   #   DT_EVOLUCA = dmy(DT_EVOLUCA)
   # ) %>% 
   filter(EVOLUCAO ==2) %>% 
-  group_by(SG_UF, DT_EVOLUCA) %>% 
+  mutate(
+    DT_SIN_PRI = DT_SIN_PRI - as.numeric(format(DT_SIN_PRI, "%w"))
+  ) %>% 
+  group_by(SG_UF, DT_SIN_PRI) %>% 
   summarise(
     srag = n(),
     covid_susp = sum(CLASSI_FIN > 3 | is.na(CLASSI_FIN)),
     covid_conf = sum(CLASSI_FIN == 5, na.rm = T)
   ) -> aaa
 
+
+dt.delay = max(aaa$DT_SIN_PRI) - 7*4
+
 library(geofacet)
 
 aaa %>% 
+  filter(year(DT_SIN_PRI)>2021) %>% 
   drop_na(SG_UF) %>% 
   #filter(SG_UF == "SP") %>% 
-  ggplot(aes(x = DT_EVOLUCA)) +
-  geom_line(aes(y = srag, color = "SRAG")) + 
+  ggplot(aes(x = DT_SIN_PRI)) +
+  #geom_line(aes(y = srag, color = "SRAG")) + 
   geom_line(aes(y = covid_susp, color = "Suspected COVID")) + 
   geom_line(aes(y = covid_conf, color = "Confirmed COVID")) + 
+  geom_vline(xintercept = dt.delay, linetype = "dashed") +
   theme_bw() + 
   labs(
-    x = "Data do óbito",
+    x = "Data de primeiros sintomas",
     y = "Óbitos",
-    color = ""
+    color = "",
+    title = "Óbitos por COVID-19 por UF em 2022 
+    (dados depois da linha pontilhada certamente sofrem de atraso)"
   ) +
   facet_geo(~ SG_UF, grid = "br_states_grid1", 
-            scales = "free_y") 
+            scales = "free_y") +
+  theme(legend.position = c(.9,.95))
   
 
 aaa %>% 
+  filter(year(DT_SIN_PRI)>2019) %>% 
   drop_na(SG_UF) %>% 
 #  filter(SG_UF == "AM") %>% 
-  ggplot(aes(x = DT_EVOLUCA)) +
+  ggplot(aes(x = DT_SIN_PRI)) +
   geom_line(aes(y = covid_susp - covid_conf)) + 
   # geom_line(aes(y = srag - covid_susp, color = "SRAG - Suspected COVID")) + 
   # geom_line(aes(y = srag - covid_conf, color = "SRAG - Confirmed COVID")) + 
   theme_bw() + 
   labs(
-    x = "Data do óbito",
+    x = "Data de primeiros sintomas",
     y = "Diferença entre óbitos suspeitos e confirmados") +
-  facet_geo(~ SG_UF, grid = "br_states_grid2", 
+  facet_geo(~ SG_UF, grid = "br_states_grid1", 
             scales = "free_y") 
 
 
