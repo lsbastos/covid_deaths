@@ -1,0 +1,41 @@
+---
+title: 'COVID-19 Deaths in Brazil: Two-years since the first confirmed death'
+author: "Leo Bastos"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Intro
+
+Two-years since the first confirmed death
+
+## The first COVID-19 death
+
+  - Brazilian Ministry of Health (BMoH): The first notified death was reported in the 17th of March, 2020. The patient died on the day before. However, on June 2020, the BMoH revised the records and the first COVID-19 death in Brazil occurred in the 12th of March, 2020. (https://g1.globo.com/google/amp/sp/sao-paulo/noticia/2021/03/17/anuncio-da-primeira-morte-por-covid-19-no-brasil-completa-um-ano.ghtml viewed on 9/May/2022)
+  - WHO: Reported to WHO in 19th of March, 2020. (https://covid19.who.int viewed on 9/May/2022
+  - SIVEP: The first reported death occured in the 12th of March, 2020 which is the date of death. The hospitalization was recorded in the 13th of March, 2020. However, a swab sample was taken on the 12th of March, 2020. The PCR result was known on the 30th of April, 2020, 49 days after the day of the death. However, there is no information about when the laboratory result was updated into the record, certainly after the 30th of April, 2020.
+
+We then consider the 12th of March, 2020 as the day of the first COVID-19 death in Brazil.
+
+In SIVEP, a COVID-19 death is defined as whenever the final classification of the case is SARI with COVID-19. Cases with different final classification but a positive result for PCR or antigen test were reclassified as COVID-19 deaths.
+
+## Total number of deaths from different sources
+
+Considering two years since the first COVID-19 death, i.e. from 
+  - BMoH: 654.556 deaths
+  - WHO: 653.498 deaths
+  - SIVEP1 (Confirmed): 629.910 deaths (CHECAR!)
+  - SIVEP1 (Suspected): 771.368 deaths (CHECAR!) 
+  - SIVEP2 (Confirmed): 634.712 deaths (CHECAR!)
+  - SIVEP2 (Suspected): 777.207 deaths (CHECAR!)
+
+SIVEP1: Database release on the week of 12th of March, 2022.
+SIVEP2: Database release on the 16th of May, 2022.
+
+In the two-year period there was 142.947 deaths notified with severe acute respiratory illness with unknown cause. None of them has a record for the SARS-CoV-2 PCR result, even though the swab sample was taken for 90.8% (129483 out of 142618) of the patients, and from those  80.6% (104380 out of 129483) had the swab sample taken with a week since symptoms onset. 
+
+## Discussion
